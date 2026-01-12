@@ -1,0 +1,57 @@
+Routeur CE-Orange (Customer Edge Orange)
+conf t
+ip route 0.0.0.0 0.0.0.0 10.0.0.21
+ip route 172.16.1.8 255.255.255.252 172.16.1.9
+ip route 10.10.10.0 255.255.255.0 172.16.1.9
+
+Routeur PE-1 (Provider Edge 1)
+ip route vrf PARIS 0.0.0.0 0.0.0.0 Serial1/1 10.0.0.1
+ip route 10.10.10.0 255.255.255.0 Serial1/0 10.0.0.22
+ip route 172.16.1.8 255.255.255.252 Serial1/0 10.0.0.22
+ip route vrf PARIS 172.16.1.8 255.255.255.252 Serial1/0 10.0.0.22
+
+-----------------------------------------------------
+
+Router CE-NICE (Customer NICE)
+conf t
+ip route 0.0.0.0 0.0.0.0 10.0.0.13
+
+
+Router PE-3 (Provider Edge NICE)
+ip route vrf NICE 0.0.0.0 0.0.0.0 Serial1/3 10.0.0.9
+ip route 192.168.3.0 255.255.255.0 Serial1/0 10.0.0.14
+
+------------------------------------------------------
+
+Router CE-LYON (Customer LYON)
+conf t
+ip route 0.0.0.0 0.0.0.0 10.0.0.17
+
+
+Router PE-2 (Provider Edge LYON)
+ip route vrf LYON 0.0.0.0 0.0.0.0 Serial1/2 10.0.0.5
+ip route 192.168.2.0 255.255.255.0 Serial1/0 10.0.0.18
+
+--------------------------------------------------------
+Router P (Provider)
+ip route 192.168.2.0 255.255.255.0 10.0.0.6
+ip route 192.168.3.0 255.255.255.0 10.0.0.10
+ip route 10.10.10.0 255.255.255.0 10.0.0.2
+ip route 172.16.1.8 255.255.255.252 10.0.0.2
+interface e0/0
+ ip nat outside
+exit
+interface Serial1/2  
+ ip nat inside
+exit
+interface Serial1/3  
+ ip nat inside
+exit
+interface Serial1/1  
+ ip nat inside
+exit
+access-list 100 permit ip 192.168.2.0 0.0.0.255 any
+access-list 100 permit ip 192.168.3.0 0.0.0.255 any
+access-list 100 permit ip 10.10.10.0 0.0.0.255 any
+access-list 100 permit ip 172.16.1.8 0.0.0.3 any
+ip nat inside source list 100 interface e0/0 overload

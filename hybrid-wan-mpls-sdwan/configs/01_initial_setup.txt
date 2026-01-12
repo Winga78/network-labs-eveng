@@ -1,0 +1,455 @@
+config system global
+    set hostname "Paris-FW-Master"
+end
+config system interface
+    edit "VLAN10"
+        set vdom "root"
+        set interface "port2"    
+        set vlanid 10
+        set type vlan              
+        set ip 10.10.10.10 255.255.255.0
+        set allowaccess ping
+    next
+    edit "port8"
+        set alias "WAN-ORANGE"
+        set mode static
+        set ip 172.16.1.9 255.255.255.252
+        set allowaccess ping
+    next
+    edit "port9"
+        set alias "WAN-FREE"
+        set mode static
+        set ip 172.16.2.9 255.255.255.252
+        set allowaccess ping
+    next
+end
+
+
+config system dhcp server
+    edit 0
+        set interface "VLAN10"
+        set default-gateway 10.10.10.10
+        set netmask 255.255.255.0
+        config ip-range
+            edit 1
+                set start-ip 10.10.10.100
+                set end-ip 10.10.10.200
+            next
+        end
+        set dns-server1 8.8.8.8
+        set dns-server2 1.1.1.1
+    next
+end
+
+
+config system sdwan
+    config member
+        edit 1
+            set interface "port8"
+            set zone "virtual-wan-link"
+            set gateway 172.16.1.10
+        next
+        edit 2
+            set interface "port9"
+            set zone "virtual-wan-link"
+            set gateway 172.16.2.10
+        next
+    end
+   set status enable
+end
+
+config firewall address
+    edit "LAN-LYON"
+        set subnet 192.168.2.0 255.255.255.0
+    next
+    edit "LAN-NICE"
+        set subnet 192.168.3.0 255.255.255.0
+    next
+    edit "LAN-PARIS"
+        set subnet 10.10.10.0 255.255.255.0
+    next
+end
+
+config firewall addrgrp
+    edit "SITES-DISTANTS-MPLS"
+        set member "LAN-LYON" "LAN-NICE"
+    next
+end
+
+
+config system sdwan
+    config health-check
+        edit "SLA_Internet"
+            set server "8.8.8.8"
+            set members 2
+            set interval 500      
+            set failtime 3        
+            config sla
+                edit 1
+                    set latency-threshold 100
+                    set packetloss-threshold 5
+                next
+            end
+        next
+        edit "SLA_MPLS_LYON"
+            set server "10.1.2.1"
+            set members 1 
+            set interval 500
+            set failtime 3
+            config sla
+                edit 1
+                    set latency-threshold 50
+                    set packetloss-threshold 2
+                next
+            end
+        next
+       edit "SLA_MPLS_NICE"
+            set server "10.1.3.1"
+            set members 1 
+            set interval 500
+            set failtime 3
+            config sla
+                edit 1
+                    set latency-threshold 50
+                    set packetloss-threshold 2
+                next
+            end
+        next
+    end
+end
+
+
+config system sdwan
+    config service
+        edit 1
+            set name "TO_LYON"
+            set mode priority
+            set dst "LAN-LYON"
+            set src "LAN-PARIS"
+            set health-check "SLA_MPLS_LYON"
+            set priority-members 1
+        next
+        edit 2
+            set name "TO_NICE"
+            set mode priority
+            set dst "LAN-NICE"
+            set src "LAN-PARIS"
+            set health-check "SLA_MPLS_NICE"
+            set priority-members 1
+        next
+        edit 3
+            set name "TO_INTERNET"
+            set mode priority
+            set dst "all"
+            set src "LAN-PARIS"
+            set health-check "SLA_Internet"
+            set priority-members 2
+        next
+    end
+end
+
+
+config router static
+    edit 1
+        set dst 0.0.0.0 0.0.0.0
+        set sdwan-zone "virtual-wan-link"
+    next
+    edit 2
+        set dst 192.168.2.0 255.255.255.0  
+        set sdwan-zone "virtual-wan-link"
+    next
+    edit 3
+        set dst 192.168.3.0 255.255.255.0  
+        set sdwan-zone "virtual-wan-link"
+    next
+end
+
+
+config firewall policy
+    edit 1
+        set name "LAN_TO_SITES"
+        set srcintf "VLAN10"
+        set dstintf "virtual-wan-link"
+        set srcaddr "LAN-PARIS"
+        set dstaddr "SITES-DISTANTS-MPLS"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set nat disable
+    next
+
+    edit 2
+        set name "LAN_TO_INTERNET"
+        set srcintf "VLAN10"
+        set dstintf "virtual-wan-link"
+        set srcaddr "LAN-PARIS"
+        set dstaddr "all"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set nat enable
+    next
+
+    edit 3
+        set name "SITES_TO_LAN"
+        set srcintf "virtual-wan-link"
+        set dstintf "VLAN10"
+        set srcaddr "SITES-DISTANTS-MPLS"
+        set dstaddr "LAN-PARIS"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set nat disable
+    next
+end
+
+config system ha
+    set group-id 1
+    set group-name "Cluster-FW-Paris"
+    set mode a-p  
+    set hbdev "port4" 50 "port5" 50
+    set session-pickup enable
+    set monitor "port2" "port8" "port9"
+    set priority 200 
+    set override enable 
+    set link-failed-signal enable
+ 
+end
+------------------------------------------------------------------------------------------------------
+
+config system global
+    set hostname "Paris-FW-Slave"
+end
+config system ha
+    set group-id 1
+    set group-name "Cluster-FW-Paris"
+    set mode a-p  
+    set hbdev "port4" 50 "port5" 50
+    set session-pickup enable
+    set monitor "port2" "port8" "port9"
+    set priority 150 
+    set override enable 
+    set link-failed-signal enable
+end
+--------------------------------------------------------------------------------------------------------
+
+Routeur CE-Orange (Customer Edge Orange)
+hostname CE-ORANGE
+!
+interface Loopback0
+ ip address 10.1.1.13 255.255.255.255
+!
+interface Ethernet0/0
+ ip address 172.16.1.10 255.255.255.252
+ no shutdown
+!
+interface Serial1/0
+ ip address 10.0.0.22 255.255.255.252
+ no shutdown
+
+Routeur Free-PRO (Customer Free)
+hostname Free-PRO
+!
+interface Loopback0
+ ip address 10.1.1.12 255.255.255.255
+!
+interface Ethernet0/0
+ ip address 172.16.2.10 255.255.255.252
+ no shutdown
+!
+interface Serial1/0
+ ip address 10.0.0.26 255.255.255.252
+ no shutdown
+
+--------------------------------------------------------------------------------------------------------
+
+
+Routeur RFree (Relais vers Internet)
+hostname RFree
+!
+interface Loopback0
+ ip address 10.1.1.11 255.255.255.255
+!sh
+interface Serial1/0
+ ip address 10.0.0.25 255.255.255.252
+ no shutdown
+
+
+Routeur PE-1 (Provider Edge 1)
+hostname PE-1
+!
+interface Loopback0
+ ip address 10.1.1.1 255.255.255.255
+!
+interface Serial1/0
+ ip address 10.0.0.21 255.255.255.252
+ no shutdown
+!
+interface Serial1/1
+ ip address 10.0.0.2 255.255.255.252
+ no shutdown
+!
+router ospf 1
+ network 10.0.0.0 0.0.0.3 area 0
+ network 10.1.1.1 0.0.0.0 area 0
+
+
+Router P (Provider)
+hostname P
+!
+interface Loopback0
+ ip address 10.1.1.10 255.255.255.255
+!
+interface Serial1/1
+ ip address 10.0.0.1 255.255.255.252
+ no shutdown
+!
+interface Serial1/2
+ ip address 10.0.0.5 255.255.255.252
+ no shutdown
+!
+interface Serial1/3
+ ip address 10.0.0.9 255.255.255.252
+ no shutdown
+!
+router ospf 1
+ network 10.0.0.0 0.0.0.3 area 0
+ network 10.0.0.4 0.0.0.3 area 0
+ network 10.0.0.8 0.0.0.3 area 0
+ network 10.1.1.10 0.0.0.0 area 0
+ default-information originate
+
+
+Router PE-2 (Provider Edge LYON)
+hostname PE-2
+!
+interface Loopback0
+ ip address 10.1.1.2 255.255.255.255
+!
+interface Serial1/0
+ ip address 10.0.0.17 255.255.255.252
+ no shutdown
+!
+interface Serial1/2
+ ip address 10.0.0.6 255.255.255.252
+ no shutdown
+!
+router ospf 1
+ network 10.0.0.4 0.0.0.3 area 0
+ network 10.1.1.2 0.0.0.0 area 0
+
+
+Router PE-3 (Provider Edge NICE)
+hostname PE-3
+!
+interface Loopback0
+ ip address 10.1.1.3 255.255.255.255
+!
+interface Serial1/0
+ ip address 10.0.0.13 255.255.255.252
+ no shutdown
+!
+interface Serial1/3
+ ip address 10.0.0.10 255.255.255.252
+ no shutdown
+!
+router ospf 1
+ network 10.0.0.8 0.0.0.3 area 0
+ network 10.1.1.3 0.0.0.0 area 0
+
+
+
+Router CE-LYON (Customer LYON)
+hostname CE-LYON
+!
+interface Loopback0
+ ip address 10.1.2.1 255.255.255.255
+!
+interface Ethernet0/1
+ ip address 192.168.2.1 255.255.255.0
+  no shutdown
+!
+interface Serial1/0
+ ip address 10.0.0.18 255.255.255.252
+ no shutdown
+
+
+Router CE-NICE (Customer NICE)
+hostname CE-NICE
+!
+interface Loopback0
+ ip address 10.1.3.1 255.255.255.255
+!
+interface Ethernet0/1
+ ip address 192.168.3.1 255.255.255.0
+ no shutdown
+!
+interface Serial1/0
+ ip address 10.0.0.14 255.255.255.252
+ no shutdown
+-------------------------------------------------------------------------------------------------------
+
+Switch Core SW1 (LAN switch PARIS)
+conf t
+!
+hostname SW1
+!
+interface range GigabitEthernet1/0 - 1
+ description TRUNK_VERS_FORTIGATE
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10
+ spanning-tree portfast trunk
+ no shutdown
+exit
+!
+interface range GigabitEthernet0/1 - 2
+ description TRUNK_VERS_SW-LAN-1                        
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active             
+ no shutdown
+exit
+!
+interface Port-channel 2
+ description AGGREGAT_SW-LAN-1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+!
+vlan 10
+name VLAN10
+state active
+exit
+ 
+
+Switch Access SW-LAN-1 (LAN switch PARIS)
+conf t 
+!
+hostname SW-LAN-1
+!
+interface Range GigabitEthernet0/1 - 2
+ description TRUNK_VERS_SW1                       
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol lacp
+ channel-group 2 mode active             
+ no shutdown
+exit
+interface Port-channel 2
+ description AGGREGAT_SW1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+exit
+vlan 10
+name VLAN10
+state active
+exit
+!
+interface GigabitEthernet0/0
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+end
+

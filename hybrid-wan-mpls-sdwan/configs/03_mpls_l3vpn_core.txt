@@ -1,0 +1,141 @@
+Router P (Provider)
+interface Serial1/1
+ mpls ip
+!
+interface Serial1/2
+ mpls ip
+!
+interface Serial1/3
+ mpls ip
+
+
+Router CE-NICE (Customer NICE)
+interface Serial1/0
+mpls ip
+!
+router bgp 64403
+ bgp log-neighbor-changes
+ network 192.168.3.0 mask 255.255.255.0
+ network 10.1.3.1 mask 255.255.255.255
+ neighbor 10.0.0.13 remote-as 64501
+
+
+Router CE-LYON (Customer LYON)
+interface Serial1/0
+mpls ip
+!
+router bgp 64402
+ bgp log-neighbor-changes
+ network 192.168.2.0 mask 255.255.255.0
+ network 10.1.2.1 mask 255.255.255.255
+ neighbor 10.0.0.17 remote-as 64501
+
+
+Routeur CE-Orange (Customer Edge Orange)
+interface Serial1/0
+mpls ip
+!
+router bgp 64401
+ bgp log-neighbor-changes
+ network 10.10.10.0 mask 255.255.255.0
+ network 172.16.1.8 mask 255.255.255.252
+ network 10.1.1.13 mask 255.255.255.255
+ neighbor 10.0.0.21 remote-as 64501
+
+
+Routeur PE-1 (Provider Edge 1)
+ip vrf PARIS
+ rd 64501:1
+ route-target export 64501:1
+ route-target import 64501:1
+!
+interface Serial1/1
+ mpls ip
+!
+router bgp 64501
+ bgp log-neighbor-changes
+ neighbor 10.1.1.2 remote-as 64501
+ neighbor 10.1.1.2 update-source Loopback0
+ neighbor 10.1.1.3 remote-as 64501
+ neighbor 10.1.1.3 update-source Loopback0
+ !
+ address-family vpnv4
+  neighbor 10.1.1.2 activate
+  neighbor 10.1.1.2 send-community extended
+  neighbor 10.1.1.3 activate
+  neighbor 10.1.1.3 send-community extended
+ exit-address-family
+ !
+ address-family ipv4 vrf PARIS
+  neighbor 10.0.0.22 remote-as 64401
+  neighbor 10.0.0.22 activate
+ exit-address-family
+!
+interface Serial1/0
+ ip vrf forwarding PARIS
+ ip address 10.0.0.21 255.255.255.252
+
+Router PE-2 (Provider Edge LYON)
+ip vrf LYON
+ rd 64501:1
+ route-target export 64501:1
+ route-target import 64501:1
+!
+interface Serial1/2
+  mpls ip
+!
+router bgp 64501
+ bgp log-neighbor-changes
+ neighbor 10.1.1.1 remote-as 64501
+ neighbor 10.1.1.1 update-source Loopback0
+ neighbor 10.1.1.3 remote-as 64501
+ neighbor 10.1.1.3 update-source Loopback0
+!
+ address-family vpnv4
+  neighbor 10.1.1.1 activate
+  neighbor 10.1.1.1 send-community extended
+  neighbor 10.1.1.3 activate
+  neighbor 10.1.1.3 send-community extended
+ exit-address-family
+ !
+ address-family ipv4 vrf LYON
+  neighbor 10.0.0.18 remote-as 64402
+  neighbor 10.0.0.18 activate
+ exit-address-family
+!
+interface Serial1/0
+ ip vrf forwarding LYON
+ ip address 10.0.0.17 255.255.255.252
+
+
+Router PE-3 (Provider Edge NICE)
+ip vrf NICE
+ rd 64501:1
+ route-target export 64501:1
+ route-target import 64501:1
+!
+interface Serial1/3
+  mpls ip
+!
+router bgp 64501
+ bgp log-neighbor-changes
+ neighbor 10.1.1.1 remote-as 64501
+ neighbor 10.1.1.1 update-source Loopback0
+ neighbor 10.1.1.2 remote-as 64501
+ neighbor 10.1.1.2 update-source Loopback0
+ !
+ address-family vpnv4
+  neighbor 10.1.1.1 activate
+  neighbor 10.1.1.1 send-community extended
+  neighbor 10.1.1.2 activate
+  neighbor 10.1.1.2 send-community extended
+ exit-address-family
+!
+ address-family ipv4 vrf NICE
+  neighbor 10.0.0.14 remote-as 64403
+  neighbor 10.0.0.14 activate
+  exit-address-family
+!
+interface Serial1/0
+ ip vrf forwarding NICE
+ ip address 10.0.0.13 255.255.255.252

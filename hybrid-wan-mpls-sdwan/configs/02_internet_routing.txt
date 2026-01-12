@@ -1,0 +1,17 @@
+Routeur RFree (Relais vers Internet)
+ip route 10.10.10.0 255.255.255.0 10.0.0.26
+
+Routeur Free-PRO (Customer Free)
+interface Ethernet0/0
+  ip nat inside
+!
+interface Serial1/0
+ ip nat outside
+!
+access-list 1 permit 10.10.10.0 0.0.0.255
+access-list 1 permit 172.16.2.8 0.0.0.3
+ip nat inside source list 1 interface Serial1/0 overload
+!
+ip route 0.0.0.0 0.0.0.0 10.0.0.25
+ip route 10.0.0.16 255.255.255.252 10.0.0.25
+ip route 10.10.10.0 255.255.255.0 172.16.2.9

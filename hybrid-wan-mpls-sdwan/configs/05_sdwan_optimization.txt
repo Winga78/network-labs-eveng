@@ -1,0 +1,17 @@
+config system sdwan
+    config health-check
+        edit "SLA_Internet"
+            set members 1 2
+        next
+    end
+end
+
+
+config system sdwan
+    config service
+        edit 3
+            set name "TO_INTERNET"
+            set priority-members 2 1
+        next
+    end
+end
