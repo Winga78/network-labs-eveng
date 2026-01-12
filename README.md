@@ -3,7 +3,7 @@ Ce dépôt regroupe différents **projets techniques** autour de  l’**administ
 
 ##  Sommaire des Projets 
 
-### 🛰️ Projet 1 – MPLS L3VPN & MP-BGP & SD-WAN & HA (Cisco)
+### Projet 1 – MPLS L3VPN & MP-BGP & SD-WAN & HA (Cisco)
 👉 Répertoire du projet :  
 `hybrid-wan-mpls-sdwan/`
 
