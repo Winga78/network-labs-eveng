@@ -1,3 +1,5 @@
+![Architecture](./architecture_diagram.png)
+
 # Guide de Troubleshooting & Validation
 
 ## Diagnostics du Cœur Réseau (Cisco PE)
