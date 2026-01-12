@@ -1,8 +1,5 @@
 # network-labs-eveng
-Ce dépôt regroupe différents **projets techniques** autour de  
-l’**administration réseau**
-
----
+Ce dépôt regroupe différents **projets techniques** autour de  l’**administration réseau**
 
 ##  Sommaire des Projets 
 
