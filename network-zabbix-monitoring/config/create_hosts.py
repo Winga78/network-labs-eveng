@@ -7,7 +7,6 @@ load_dotenv()
 zabbix_ip = os.getenv("IP_SERVER-ZABBIX")
 
 hosts_api = [
-    {"ip": os.getenv("IP_BR-EDGE-01"), "name": "BR-EDGE-01"},
     {"ip": os.getenv("IP_HQ-CORE-01"), "name": "HQ-CORE-01"},
     {"ip": os.getenv("IP_HQ-ACC-01"), "name": "HQ-ACC-01"},
     {"ip": os.getenv("IP_INET-SIM-01"), "name": "INET-SIM-01"},

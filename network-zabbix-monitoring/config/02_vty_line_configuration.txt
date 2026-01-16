@@ -18,7 +18,7 @@ username admin privilege 15 secret admin
 !
 access-list 23 permit 192.168.58.0 0.0.0.255
 !
-line vty 0 15
+line vty 0 4
 exec-timeout 15 0
 login local
 transport input telnet

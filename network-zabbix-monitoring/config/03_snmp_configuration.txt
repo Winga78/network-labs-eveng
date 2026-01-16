@@ -1,13 +1,6 @@
 [INET-SIM-01]
 snmp-server community ZBX-LAB-RO RO 
 
-
-
-[BR-EDGE-01]
-snmp-server community ZBX-LAB-RO RO 
-
-
-
 [HQ-CORE-01]
 snmp-server community ZBX-LAB-RO RO 
 
