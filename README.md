@@ -4,7 +4,7 @@
 👉 Répertoire du projet :  
 `hybrid-wan-mpls-sdwan/`
 
-### Projet 2 – ZABBIX MONITORING & IPSEC-VPN & FORTI & APASHE WEB SITE
+### Projet 2 – ZABBIX MONITORING & IPSEC-VPN & FORTI & APACHE WEB SITE
 👉 network-zabbix-monitoring :  
 `network-zabbix-monitoring/`
 
