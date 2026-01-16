@@ -1,0 +1,157 @@
+[INET-SIM-01]
+interface GigabitEthernet0/0
+ip address dhcp
+no shutdown
+!
+interface Loopback 0
+ip address 10.10.0.1 255.255.255.255
+!
+interface GigabitEthernet0/1
+ ip address 10.10.100.1 255.255.255.252
+ no shutdown
+-----------------------------------------------------
+
+[BR-EDGE-01]
+interface GigabitEthernet0/0
+ ip address dhcp
+ no shutdown
+!
+interface Loopback 0
+ip address 10.10.0.2 255.255.255.255
+!
+interface GigabitEthernet0/3
+ ip address 10.10.101.1 255.255.255.252
+ no shutdown 
+
+-----------------------------------------------------
+
+[HQ-CORE-01]
+interface vlan 1
+ip address dhcp
+no shutdown 
+!
+vlan 10
+name VLAN10
+state active
+exit
+!
+interface GigabitEthernet0/0
+switchport mode access
+switchport access vlan 1
+no shutdown
+!
+interface GigabitEthernet0/3
+ description TRUNK_VERS_FORTIGATE
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10
+ spanning-tree portfast trunk
+ no shutdown
+!
+interface GigabitEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10
+ no shutdown
+
+----------------------------------------------------------------
+[HQ-ACC-01]
+vlan 10
+name VLAN 10
+!
+interface GigabitEthernet0/0
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ no shutdown
+!
+interface GigabitEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10
+ no shutdown
+!
+ interface vlan 1
+  ip address dhcp
+  no shutdown 
+!
+interface GigabitEthernet0/1
+ switchport mode access
+ switchport access vlan 1
+ no shutdown
+ 
+--------------------------------------------------------------
+[HQ-FW-01]
+config system interface
+ edit "port1"
+      set vdom root
+      set mode static
+      set ip 10.10.100.2 255.255.255.252
+      set allowaccess ping
+ next
+ edit "port2" 
+      set vdom root
+      set mode dhcp
+      set allowaccess ping http https
+ next
+ edit VLAN_10
+        set vdom root
+        set interface "port3"
+        set type vlan
+        set vlanid 10
+        set mode static
+        set ip 10.10.10.100 255.255.255.0
+        set allowaccess https ping http
+ next
+end
+
+config router static
+    edit 1
+        set dst 0.0.0.0 0.0.0.0
+        set gateway 10.10.100.1
+        set device "port1"
+    next
+end
+
+config firewall address
+    edit "LAN-HQ"
+        set subnet 10.10.10.0 255.255.255.0
+    next
+end
+
+config firewall policy    
+    edit 1
+        set name "LAN_TO_INTERNET"
+        set srcintf "VLAN_10"
+        set dstintf "port1"
+        set srcaddr "LAN-HQ"
+        set dstaddr "all"
+        set action accept
+        set schedule "always"
+        set service "ALL"
+        set nat enable
+    next
+end
+
+
+-------------------------------------------------
+Q-SRV-WEB-01
+
+sudo -i
+
+nano /etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: no
+      addresses: [10.10.10.10/24]
+      gateway4: 10.10.10.100
+      nameservers:
+        addresses: [8.8.8.8, 1.1.1.1]
+
+netplan apply
+
+
+
+

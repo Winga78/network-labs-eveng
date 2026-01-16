@@ -1,0 +1,71 @@
+hostname INET-SIM-01
+!
+username admin privilege 15 secret admin
+!
+access-list 23 permit 192.168.58.0 0.0.0.255
+!
+line vty 0 15
+exec-timeout 15 0
+login local
+transport input telnet
+access-class 23 in
+
+
+
+hostname BR-EDGE-01
+!
+username admin privilege 15 secret admin
+!
+access-list 23 permit 192.168.58.0 0.0.0.255
+!
+line vty 0 15
+exec-timeout 15 0
+login local
+transport input telnet
+access-class 23 in
+
+
+hostname HQ-CORE-01
+!
+username admin privilege 15 secret admin
+!
+access-list 23 permit 192.168.58.0 0.0.0.255
+!
+line vty 0 15
+exec-timeout 15 0
+login local
+transport input telnet
+access-class 23 in
+
+
+hostname HQ-ACC-01
+!
+username admin privilege 15 secret admin
+!
+access-list 23 permit 192.168.58.0 0.0.0.255
+!
+line vty 0 15
+exec-timeout 15 0
+login local
+transport input telnet
+access-class 23 in
+
+
+
+
+config system admin
+    edit "admin"
+        set trusthost1 192.168.58.0 255.255.255.0
+        set password admin
+    next
+end
+
+
+config system global
+    set hostname HQ-FW-01
+end
+config system interface
+  edit "port2"
+    set allowaccess ssh
+  next 
+end

@@ -1,0 +1,39 @@
+[INET-SIM-01]
+snmp-server community ZBX-LAB-RO RO 
+
+
+
+[BR-EDGE-01]
+snmp-server community ZBX-LAB-RO RO 
+
+
+
+[HQ-CORE-01]
+snmp-server community ZBX-LAB-RO RO 
+
+
+
+[HQ-ACC-01]
+snmp-server community ZBX-LAB-RO RO 
+
+
+[HQ-FW-01]
+config system snmp community
+    edit 1
+        set name "ZBX-LAB-RO"
+        config hosts
+            edit 1
+                set ip 192.168.58.0 255.255.255.0  
+            next
+        end
+    next
+end
+config system snmp sysinfo
+    set status enable
+end
+
+config system interface
+ edit "port2"
+    set allowaccess snmp
+ next
+end
